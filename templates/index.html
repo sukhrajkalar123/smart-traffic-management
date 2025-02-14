@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Traffic Management System</title>
+  <!-- Google Fonts for a modern look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* CSS Variables for color scheme */
+    :root {
+      --primary: #003366;
+      --primary-light: #00509e;
+      --accent: #f39c12;
+      --bg: #f4f6f8;
+      --card-bg: #ffffff;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --info: #2ecc71;
+      --warning: #e74c3c;
+      --emergency-colors: orange, green, purple, blue, magenta, cyan, gold, teal;
+    }
+
+    /* Reset & Base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg);
+      color: #333;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header with Gradient and Shadow */
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      padding: 1.8rem 1rem;
+      text-align: center;
+      box-shadow: 0 3px 6px var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header h1 {
+      font-size: 3rem;
+      margin-bottom: 0.4rem;
+      font-weight: 700;
+    }
+    header p {
+      font-size: 1.3rem;
+      font-weight: 300;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    /* Panel/Card Styles */
+    .panel {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .panel:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+    .panel h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--primary);
+      color: var(--primary);
+    }
+
+    /* Form Styles */
+    .form-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      flex: 0 0 180px;
+      margin-right: 1rem;
+      font-weight: 500;
+      color: var(--primary);
+    }
+    .form-group input,
+    .form-group select {
+      flex: 1;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 5px rgba(0,51,102,0.5);
+    }
+
+    /* Button Styles */
+    .button-group {
+      text-align: right;
+      margin-top: 1rem;
+    }
+    button {
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.3rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+      margin-left: 0.5rem;
+    }
+    button:hover {
+      background-color: var(--primary-light);
+      transform: scale(1.02);
+    }
+
+    /* Canvas Styles */
+    #canvas {
+      display: block;
+      margin: 0 auto;
+      width: 1200px;
+      height: 1000px;
+      background-image: url('https://via.placeholder.com/1200x1000.png?text=Brampton+Map');
+      background-size: cover;
+      background-position: center;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      header h1 { font-size: 2.2rem; }
+      .form-group label { flex: 0 0 150px; }
+      #canvas { width: 100%; height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Smart Traffic Management</h1>
+    <p>Brampton, Ontario – Advanced Route Planner &amp; Emergency Management</p>
+  </header>
+  <div class="container">
+    <!-- Normal Vehicle Routing Panel -->
+    <div class="panel" id="normalRoutingPanel">
+      <h3>Normal Vehicle Routing</h3>
+      <div class="form-group">
+        <label for="normalSource">Source:</label>
+        <select id="normalSource"></select>
+      </div>
+      <div class="form-group">
+        <label for="normalDestination">Destination:</label>
+        <select id="normalDestination"></select>
+      </div>
+      <div class="button-group">
+        <button id="computeNormal">Compute Normal Route</button>
+      </div>
+    </div>
+    <!-- Emergency Vehicle Management Panel -->
+    <div class="panel" id="emergencyPanel">
+      <h3>Emergency Vehicle Management</h3>
+      <div class="form-group">
+        <label for="evId">Vehicle ID:</label>
+        <input type="text" id="evId" placeholder="e.g., Ambulance_1" />
+      </div>
+      <div class="form-group">
+        <label for="evSource">Source:</label>
+        <select id="evSource"></select>
+      </div>
+      <div class="form-group">
+        <label for="evDestination">Destination:</label>
+        <select id="evDestination"></select>
+      </div>
+      <div class="form-group">
+        <label for="evPriority">Priority:</label>
+        <input type="number" id="evPriority" value="1" min="0" />
+      </div>
+      <div class="button-group">
+        <button id="addEV">Add Emergency Vehicle</button>
+        <button id="processEV">Process Emergency Vehicles</button>
+      </div>
+    </div>
+    <!-- Map Canvas Panel -->
+    <div class="panel">
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+  <script>
+    // Define nodes with coordinates (must match backend)
+    const nodes = {
+      "Downtown Brampton": { x: 100, y: 100 },
+      "City Centre": { x: 250, y: 120 },
+      "Main & Queen": { x: 400, y: 150 },
+      "Civic Centre": { x: 550, y: 180 },
+      "Bramalea Mall": { x: 100, y: 250 },
+      "Gore Meadows": { x: 250, y: 260 },
+      "Central Park": { x: 400, y: 280 },
+      "Northgate": { x: 550, y: 300 },
+      "Chinguacousy Park": { x: 150, y: 400 },
+      "Heart Lake": { x: 300, y: 420 },
+      "Mount Pleasant": { x: 450, y: 440 },
+      "Rose Theatre": { x: 600, y: 460 },
+      "Professor's Park": { x: 150, y: 550 },
+      "Landmark Centre": { x: 300, y: 570 },
+      "Brampton Conservation": { x: 450, y: 590 },
+      "Brampton Gateway": { x: 600, y: 610 },
+      "Shoppers Plaza": { x: 700, y: 130 },
+      "Westwood Mall": { x: 750, y: 180 },
+      "Garden City": { x: 700, y: 250 },
+      "Peel Heritage": { x: 750, y: 300 },
+      "Maple Grove": { x: 700, y: 370 },
+      "Riverside Park": { x: 750, y: 420 },
+      "Sunnybrook Plaza": { x: 700, y: 500 },
+      "New Horizon Centre": { x: 750, y: 550 },
+      "Innovation Hub": { x: 700, y: 630 },
+      "Tech Park": { x: 750, y: 680 },
+      "Cultural Centre": { x: 900, y: 100 },
+      "Civic Plaza": { x: 950, y: 150 },
+      "Art District": { x: 900, y: 220 },
+      "Historic Market": { x: 950, y: 270 },
+      "Sports Complex": { x: 900, y: 340 },
+      "Downtown Commons": { x: 950, y: 390 },
+      "Uptown Centre": { x: 900, y: 460 },
+      "Lakeside Mall": { x: 950, y: 510 },
+      "Northside Park": { x: 900, y: 580 },
+      "West End": { x: 100, y: 800 },
+      "East End": { x: 1100, y: 800 },
+      "Central Station": { x: 600, y: 50 },
+      "Brampton Village": { x: 350, y: 30 },
+      "Crescent Plaza": { x: 800, y: 30 },
+      "Heritage Park": { x: 200, y: 30 },
+      "Millennium Square": { x: 1050, y: 30 },
+      "City Walk": { x: 600, y: 900 },
+      "Cornerstone Plaza": { x: 300, y: 450 },
+      "Violet Grove": { x: 450, y: 650 },
+      "Maple Ridge": { x: 600, y: 700 },
+      "Pine Crest": { x: 750, y: 740 },
+      "Oak Park": { x: 900, y: 750 },
+      "Riverbend": { x: 1050, y: 750 },
+      "Summit Plaza": { x: 1150, y: 800 }
+    };
+
+    // Populate dropdowns dynamically.
+    const dropdownIds = ["normalSource", "normalDestination", "evSource", "evDestination"];
+    dropdownIds.forEach(id => {
+      const select = document.getElementById(id);
+      for (let name in nodes) {
+        let option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      }
+    });
+
+    // Set up canvas.
+    const canvas = document.getElementById('canvas');
+    canvas.width = 1200;
+    canvas.height = 1000;
+    const ctx = canvas.getContext('2d');
+
+    // Draw the network graph.
+    function drawGraph() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Draw edges by connecting nodes within a threshold.
+      ctx.strokeStyle = '#aaa';
+      ctx.lineWidth = 1.5;
+      const names = Object.keys(nodes);
+      for (let i = 0; i < names.length; i++) {
+        for (let j = i + 1; j < names.length; j++) {
+          const n1 = nodes[names[i]];
+          const n2 = nodes[names[j]];
+          const dist = Math.hypot(n2.x - n1.x, n2.y - n1.y);
+          if (dist < 350) {
+            ctx.beginPath();
+            ctx.moveTo(n1.x, n1.y);
+            ctx.lineTo(n2.x, n2.y);
+            ctx.stroke();
+          }
+        }
+      }
+      // Draw nodes.
+      for (let name in nodes) {
+        const pos = nodes[name];
+        const cx = pos.x;
+        const cy = pos.y;
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#003366';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+        // Draw label with offset.
+        ctx.fillStyle = '#003366';
+        ctx.font = '9px Roboto, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(name, cx + 8, cy - 8);
+      }
+    }
+
+    // Draw a route with an arrowhead.
+    function drawRoute(route, color) {
+      if (!route || route.length === 0) return;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      route.forEach((node, i) => {
+        const pos = nodes[node];
+        if (i === 0) { ctx.moveTo(pos.x, pos.y); }
+        else { ctx.lineTo(pos.x, pos.y); }
+      });
+      ctx.stroke();
+      if (route.length >= 2) {
+        const pos1 = nodes[route[route.length - 2]];
+        const pos2 = nodes[route[route.length - 1]];
+        const angle = Math.atan2(pos2.y - pos1.y, pos2.x - pos1.x);
+        const arrowLength = 10;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(pos2.x, pos2.y);
+        ctx.lineTo(pos2.x - arrowLength * Math.cos(angle - Math.PI/6),
+                   pos2.y - arrowLength * Math.sin(angle - Math.PI/6));
+        ctx.lineTo(pos2.x - arrowLength * Math.cos(angle + Math.PI/6),
+                   pos2.y - arrowLength * Math.sin(angle + Math.PI/6));
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    // Define an array of colors for emergency routes.
+    const emergencyColors = ["orange", "green", "purple", "blue", "magenta", "cyan", "gold", "teal", "salmon", "violet"];
+
+    // Event listener for computing a normal route.
+    document.getElementById('computeNormal').addEventListener('click', () => {
+      console.log("Compute Normal Route clicked");
+      const source = document.getElementById('normalSource').value;
+      const destination = document.getElementById('normalDestination').value;
+      fetch(`/compute_route?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log("Normal route data:", data);
+          drawGraph();
+          if (data.path) { drawRoute(data.path, 'red'); }
+          else if (data.error) { alert(data.error); }
+        })
+        .catch(err => console.error(err));
+    });
+
+    // Event listener for adding an emergency vehicle.
+    document.getElementById('addEV').addEventListener('click', () => {
+      console.log("Add Emergency Vehicle clicked");
+      const vehicleId = document.getElementById('evId').value || 'EV';
+      const source = document.getElementById('evSource').value;
+      const destination = document.getElementById('evDestination').value;
+      const priority = document.getElementById('evPriority').value;
+      fetch(`/add_emergency_vehicle?vehicle_id=${encodeURIComponent(vehicleId)}&source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&priority=${priority}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log("Add EV response:", data);
+          alert(data.message);
+        })
+        .catch(err => console.error(err));
+    });
+
+    // Event listener for processing emergency vehicles.
+    document.getElementById('processEV').addEventListener('click', () => {
+      console.log("Process Emergency Vehicles clicked");
+      fetch('/process_emergency')
+        .then(response => response.json())
+        .then(data => {
+          console.log("Process EV response:", data);
+          drawGraph();
+          if (data.results && data.results.length > 0) {
+            data.results.forEach((item, index) => {
+              let color = emergencyColors[index % emergencyColors.length];
+              if (item.route && item.route.length > 0) {
+                drawRoute(item.route, color);
+              } else {
+                alert(`No route found for Emergency Vehicle '${item.vehicle_id}'`);
+              }
+            });
+          } else {
+            alert('No emergency vehicles to process.');
+          }
+        })
+        .catch(err => console.error(err));
+    });
+
+    // Initial drawing.
+    drawGraph();
+  </script>
+</body>
+</html>
+
+
+// cd /Users/sukhrajkalar/Desktop/smart_traffic_full
+python3 app.py
